@@ -6,3 +6,8 @@ Includes bash scripts automating hardware resource checkups.
 - VM: Oracle Virtual Box
 - Host OS: Windows 11
 - Guest OS: CentOS Stream 10
+
+## Dependencies/Submodules
+- mailx/s-nail (for email formatting)
+- epel-release (repo for installing msmtp on CentOS)
+- msmtp (for email sending)
