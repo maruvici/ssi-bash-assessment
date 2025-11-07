@@ -1,5 +1,8 @@
 #!/usr/bin/bash
 
+# DEPENDENCIES CHECK
+bash ./dependencies.sh
+
 # INPUT/PARAMETER VALIDATION
 # Exit code 4 implies error due to invalid input
 c_set=1
@@ -45,12 +48,15 @@ fi
 total_memory=$( free | grep Mem: | awk '{print $2}' )
 used_memory=$( free | grep Mem: | awk '{print $3 }' )
 used_percentage=$( echo "scale=2; ($used_memory * 100) / $total_memory" | bc )
-echo $used_percentage $crit_thresh $warn_thresh
 
 if [[ $( echo "$used_percentage < $warn_thresh" | bc ) = 1 ]]; then
     exit 0
 elif [[ $( echo "($used_percentage >= $warn_thresh) * ($used_percentage < $crit_thresh)" | bc ) = 1 ]]; then
     exit 1
 elif [[ $(echo "($used_percentage >= $crit_thresh)" | bc ) = 1 ]]; then
+    subject="$(date +"%Y%m%d %H:%M ") cpu_check - critical" 
+    body="$(top -b -n 1 -o %MEM | head -n 17 | tail -n 11)"
+    message="Memory usage is now critical. Below are the top 10 processes in terms of memory use:\n$body"
+    echo -e "$message" | mailx -s "$subject" $email
     exit 2
 fi
