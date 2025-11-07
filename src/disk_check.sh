@@ -24,7 +24,7 @@ while getopts ":c:w:e:" param; do
             echo "Error: -$OPTARG requires an argument"; exit 4
             ;;
         \?)
-            echo "Usage: bash cpu_check.sh -c argC -w argW -e argE"; exit 4
+            echo "Usage: bash disk_check.sh -c argC -w argW -e argE"; exit 4
             ;;
     esac
 done
@@ -33,7 +33,7 @@ PERCENTAGE_REGEX="^[0-9]+$"
 EMAIL_REGEX="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
 
 if [ $(( $c_set + $w_set + $e_set )) -ne 0 ]; then
-    echo "Usage: cpu_check.sh -c argC -w argW -e argE"; exit 4
+    echo "Usage: disk_check.sh -c argC -w argW -e argE"; exit 4
 elif ! [[ $crit_thresh =~ $PERCENTAGE_REGEX && $crit_thresh -le 100 && $crit_thresh -ge 0 ]]; then
     echo "Enter valid critical threshold percentage"; exit 4
 elif ! [[ $warn_thresh =~ $PERCENTAGE_REGEX && $warn_thresh -le 100 && $warn_thresh -ge 0 ]]; then
@@ -45,3 +45,19 @@ elif ! [[ $email =~ $EMAIL_REGEX ]]; then
 fi
 
 # DISK CHECK
+crit_disks=$(df -P | awk -v crit="$crit_thresh" '0+$5 >= crit {print}')
+warn_disks=$(df -P | awk -v warn="$warn_thresh" '0+$5 >= warn {print}')
+
+if [ -n "$crit_disks" ]; then
+    TMPREPORT=$(mktemp disk_report.XXXXXX)
+    subject="$(date +"%Y%m%d %H:%M ") disk_check - critical"
+    echo "$crit_disks" > "$TMPREPORT"
+    echo -e "Disk usage is now critical. Check critical disk partitions below" \
+    | mailx -a "$TMPREPORT" -s "$subject" $email
+    rm -f "$TMPREPORT"
+    exit 2
+elif [ -n "$warn_disks" ]; then
+    exit 1
+else
+    exit 0
+fi
