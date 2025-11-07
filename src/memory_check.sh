@@ -54,9 +54,11 @@ if [[ $( echo "$used_percentage < $warn_thresh" | bc ) = 1 ]]; then
 elif [[ $( echo "($used_percentage >= $warn_thresh) * ($used_percentage < $crit_thresh)" | bc ) = 1 ]]; then
     exit 1
 elif [[ $(echo "($used_percentage >= $crit_thresh)" | bc ) = 1 ]]; then
-    subject="$(date +"%Y%m%d %H:%M ") memory_check - critical" 
-    body="$(top -b -n 1 -o %MEM | head -n 17 | tail -n 11)"
-    message="Memory usage is now critical. Below are the top 10 processes in terms of memory use:\n$body"
-    echo -e "$message" | mailx -s "$subject" $email
+    TMPREPORT=$(mktemp mem_report.XXXXXX)
+    subject="$(date +"%Y%m%d %H:%M ") mem_check - critical"
+    ps -eo pid,user,pmem,time,comm --sort=-pmem | head -n 11 | column -t > "$TMPREPORT"
+    echo -e "Memory usage is now critical. Check attached memory process report below" \
+    | mailx -a "$TMPREPORT" -s "$subject" $email
+    rm -f "$TMPREPORT"
     exit 2
 fi

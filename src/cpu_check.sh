@@ -45,16 +45,19 @@ elif ! [[ $email =~ $EMAIL_REGEX ]]; then
 fi
 
 # CPU CHECK
-total_cpu_used=$( top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}' )
+IDLE_CPU_REGEX="s/.*, *\([0-9.]*\)%* id.*/\1/"
+total_cpu_used=$( top -bn1 | grep "Cpu(s)" | sed "$IDLE_CPU_REGEX" | awk '{print 100 - $1}' )
 
 if [[ $( echo "$total_cpu_used < $warn_thresh" | bc ) = 1 ]]; then
     exit 0
 elif [[ $( echo "($total_cpu_used >= $warn_thresh) * ($total_cpu_used < $crit_thresh)" | bc ) = 1 ]]; then
     exit 1
 elif [[ $(echo "($total_cpu_used >= $crit_thresh)" | bc ) = 1 ]]; then
-    subject="$(date +"%Y%m%d %H:%M ") cpu_check - critical" 
-    body="$(top -b -n 1 -o %CPU | head -n 17 | tail -n 11)"
-    message="CPU usage is now critical. Below are the top 10 processes in terms of CPU use:\n$body"
-    echo -e "$message" | mailx -s "$subject" $email
+    TMPREPORT=$(mktemp cpu_report.XXXXXX)
+    subject="$(date +"%Y%m%d %H:%M ") cpu_check - critical"
+    ps -eo pid,user,pcpu,time,comm --sort=-pcpu | head -n 11 | column -t > "$TMPREPORT"
+    echo -e "CPU usage is now critical. Check attached CPU process report below" \
+    | mailx -a "$TMPREPORT" -s "$subject" $email
+    rm -f "$TMPREPORT"
     exit 2
 fi
