@@ -8,6 +8,11 @@ Includes bash scripts automating hardware resource checkups.
 - Guest OS: CentOS Stream 10
 
 ## Dependencies/Submodules
-- mailx/s-nail (for email formatting)
+- bats (for unit testing)
 - epel-release (repo for installing msmtp on CentOS)
+- mailx/s-nail (for email formatting)
 - msmtp (for email sending)
+
+## Current Limitations
+- Non-compatible with non-gmail accounts
+- Thresholds are non-negative whole numbers only
