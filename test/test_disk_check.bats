@@ -104,4 +104,20 @@ setup() {
     assert_equal "$status" 4
 }
 
+# DISK CHECK TESTS
+@test "Handles DiskUse < WarnThresh Case" {
+    run disk_check.sh -c 100 -w 99 -e mvtevangelista0820@gmail.com
+    assert_equal "$status" 0
+}
+
+@test "Handles CritThresh > DiskUse >= WarnThresh Case" {
+    run disk_check.sh -c 100 -w 0 -e mvtevangelista0820@gmail.com
+    assert_equal "$status" 1
+}
+
+@test "Handles DiskUse >= CritThresh Case" {
+    run disk_check.sh -c 1 -w 0 -e mvtevangelista0820@gmail.com
+    assert_equal "$status" 2
+}
+
 
