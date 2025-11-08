@@ -104,4 +104,18 @@ setup() {
     assert_equal "$status" 4
 }
 
+# CPU CHECK TESTS
+@test "Handles CpuUse < WarnThresh Case" {
+    run cpu_check.sh -c 100 -w 99 -e mvtevangelista0820@gmail.com
+    assert_equal "$status" 0
+}
 
+@test "Handles CritThresh > CpuUse >= WarnThresh Case" {
+    run cpu_check.sh -c 100 -w 0 -e mvtevangelista0820@gmail.com
+    assert_equal "$status" 1
+}
+
+@test "Handles CpuUse >= CritThresh Case" {
+    run cpu_check.sh -c 1 -w 0 -e mvtevangelista0820@gmail.com
+    assert_equal "$status" 2
+}
