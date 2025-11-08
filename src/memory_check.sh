@@ -1,7 +1,8 @@
 #!/usr/bin/bash
 
 # DEPENDENCIES CHECK
-bash ./dependencies.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+bash $SCRIPT_DIR/dependencies.sh
 
 # INPUT/PARAMETER VALIDATION
 # Exit code 4 implies error due to invalid input
@@ -12,12 +13,21 @@ e_set=1
 while getopts ":c:w:e:" param; do
     case $param in
         c) 
+            if [[ -z "$OPTARG" || "$OPTARG" == -* ]]; then
+                echo "Error: -$param requires an argument"; exit 4
+            fi
             crit_thresh=$OPTARG; c_set=0
             ;;
         w)
+            if [[ -z "$OPTARG" || "$OPTARG" == -* ]]; then
+                echo "Error: -$param requires an argument"; exit 4
+            fi
             warn_thresh=$OPTARG; w_set=0
             ;;
         e) 
+            if [[ -z "$OPTARG" || "$OPTARG" == -* ]]; then
+                echo "Error: -$param requires an argument"; exit 4
+            fi
             email=$OPTARG; e_set=0
             ;;
         :) 
@@ -34,9 +44,9 @@ EMAIL_REGEX="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
 
 if [ $(( $c_set + $w_set + $e_set )) -ne 0 ]; then
     echo "Usage: memory_check.sh -c argC -w argW -e argE"; exit 4
-elif ! [[ $crit_thresh =~ $PERCENTAGE_REGEX && $crit_thresh -le 100 && $crit_thresh -ge 0 ]]; then
+elif ! [[ $crit_thresh =~ $PERCENTAGE_REGEX && $crit_thresh -le 100 && $crit_thresh -gt 0 ]]; then
     echo "Enter valid critical threshold percentage"; exit 4
-elif ! [[ $warn_thresh =~ $PERCENTAGE_REGEX && $warn_thresh -le 100 && $warn_thresh -ge 0 ]]; then
+elif ! [[ $warn_thresh =~ $PERCENTAGE_REGEX && $warn_thresh -lt 100 && $warn_thresh -ge 0 ]]; then
     echo "Enter valid warning threshold percentage"; exit 4
 elif [[ $warn_thresh -ge $crit_thresh ]]; then
     echo "Requirement: Critical Threshold ($crit_thresh) > Warning Threshold ($warn_thresh)"; exit 4
